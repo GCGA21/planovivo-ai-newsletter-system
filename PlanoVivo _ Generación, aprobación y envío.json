@@ -1,0 +1,1307 @@
+{
+  "name": "PlanoVivo | Generación, aprobación y envío",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "event": "pagedUpdatedInDatabase",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-8040-a54a-000b63cb5882",
+          "mode": "list",
+          "cachedResultName": "4 ideas de contenido",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab8021a602f3a7b9f76ce6"
+        }
+      },
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "38558665-6b46-4b42-b968-6e48786e8aa3",
+      "name": "Disparador: Idea actualizada",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "110318d8-e0a5-4f40-a84b-7e1e60c8835d",
+              "leftValue": "={{ $json.Estado }}",
+              "rightValue": "Listo para IA",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d880e581-4dfd-4455-bb2a-ce1f3a24ca1c",
+      "name": "Filtro: solo ideas Listo para IA"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f0897054-ca21-4b60-9ab0-212fa337c6cd",
+              "leftValue": "={{ $json.Name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f1dce099-b35d-4a85-b357-f9e1e3f0ae26",
+              "leftValue": "={{ $json.Brief }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9835cd95-7bf6-4b56-ad2b-2233ce853a68",
+              "leftValue": "={{ $json[\"Segmento objetivo\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "90fa6a9e-ba48-4bda-b7bf-1e86787e9468",
+      "name": "Validación: datos completos"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-8059-8ee2-000b1198e6db",
+          "mode": "list",
+          "cachedResultName": "Log de ejecuciones y errores",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab809bbc73c796270a4e44"
+        },
+        "title": "={{ $json.Name }} - Datos faltantes",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Tipo de error|select",
+              "selectValue": "Datos faltantes"
+            },
+            {
+              "key": "Mensaje|rich_text",
+              "textContent": "={{ $json.Name }} no tiene brief o segmento asignado. Revisar antes de reprocesar."
+            },
+            {
+              "key": "Severidad|select",
+              "selectValue": "Media"
+            },
+            {
+              "key": "Fecha|date",
+              "date": "={{ $now }}"
+            },
+            {
+              "key": "4 ideas de contenido|relation",
+              "relationValue": [
+                "={{ $json.id }}"
+              ]
+            },
+            {
+              "key": "ID de ejecución|rich_text",
+              "textContent": "={{ $execution.id }}"
+            },
+            {
+              "key": "Nodo que falló|rich_text",
+              "textContent": "Validación: datos completos"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        672,
+        96
+      ],
+      "id": "d5deda1f-fa25-49b7-aac7-a4e2058fc765",
+      "name": "Registrar error: datos faltantes",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Estado|select",
+              "selectValue": "Procesado por IA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "ad8c71cb-d93c-49a0-b7d0-1c623be6a9f8",
+      "name": "Actualizar estado: Procesado por IA",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.property_segmento_objetivo[0] }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "9626166d-3d9d-4799-9777-beae22df5582",
+      "name": "Leer segmento",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-80b5-aa6d-000b639239f2",
+          "mode": "list",
+          "cachedResultName": "1 guía de marca",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab80b8b78fffc8b1e36669"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        -96
+      ],
+      "id": "10e51754-a6e1-4412-86e1-93b2b8b9e592",
+      "name": "Leer guía de marca",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres un clasificador de prioridad para un newsletter de PlanoVivo.\n\nTítulo de la idea: {{ $('Actualizar estado: Procesado por IA').item.json.property_name }}\nTipo: {{ $('Actualizar estado: Procesado por IA').item.json.property_tipo }}\nBrief: {{ $('Actualizar estado: Procesado por IA').item.json.property_brief }}\nSegmento objetivo: {{ $('Leer segmento').item.json.property_name }}\nObjetivo del email para este segmento: {{ $('Leer segmento').item.json.property_objetivo_del_email }}\n\nClasifica esta idea en una de estas 3 prioridades, según qué tan urgente o relevante es para el negocio ahora mismo: Alta, Media, Baja.\n\nResponde ÚNICAMENTE con la palabra de la prioridad (Alta, Media o Baja), sin explicación ni texto adicional."
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 20
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "ce429209-0788-4f3f-b093-2e8bcd193d96",
+      "name": "IA 1: Clasificar prioridad",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "anthropicApi": {
+          "id": "TwAjWL4m8cbV6RbX",
+          "name": "Anthropic account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-sonnet-4-6",
+          "mode": "list",
+          "cachedResultName": "claude-sonnet-4-6"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres el redactor de email marketing de PlanoVivo, un software de gestión para diseñadores de interiores.\n\nGUÍA DE MARCA\nTono de voz: {{ $('Leer guía de marca').item.json.property_tono_de_voz }}\nReglas de estilo: {{ $('Leer guía de marca').item.json.property_reglas_de_estilo }}\nPalabras a evitar: {{ $('Leer guía de marca').item.json.property_palabras_a_evitar }}\nCTA estándar: {{ $('Leer guía de marca').item.json.property_cta_estándar }}\nEjemplo de buen texto: {{ $('Leer guía de marca').item.json.property_ejemplo_de_buen_texto }}\n\nSEGMENTO OBJETIVO\nNombre: {{ $('Leer segmento').item.json.property_name }}\nDescripción: {{ $('Leer segmento').item.json.property_descripción }}\nTono sugerido para este segmento: {{ $('Leer segmento').item.json.property_tono_sugerido }}\nObjetivo del email: {{ $('Leer segmento').item.json.property_objetivo_del_email }}\n\nIDEA A DESARROLLAR\nTítulo: {{ $('Actualizar estado: Procesado por IA').item.json.property_name }}\nTipo: {{ $('Actualizar estado: Procesado por IA').item.json.property_tipo }}\nBrief: {{ $('Actualizar estado: Procesado por IA').item.json.property_brief }}\n\nTAREA\nEscribe un email de newsletter en español para este segmento, siguiendo la guía de marca y el brief.\n\nResponde EXACTAMENTE con este formato, sin nada antes ni después:\n\nASUNTO:\n[el asunto aquí, menos de 60 caracteres]\n\nPREHEADER:\n[el preheader aquí, menos de 90 caracteres]\n\nCUERPO:\n[el cuerpo del email en HTML simple, usando SOLO las etiquetas <p>, <strong>, <a>, <br>, sin bloque <style>, sin <!DOCTYPE>, sin <html>, <head> ni <body>. Solo el contenido interior del mensaje. El resultado completo debe tener menos de 1500 caracteres]"
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {
+          "maxTokens": 1024
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        -96
+      ],
+      "id": "a33e62de-b38c-42c2-a78e-fa3a1b208afb",
+      "name": "IA 2: Redactar newsletter",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "anthropicApi": {
+          "id": "TwAjWL4m8cbV6RbX",
+          "name": "Anthropic account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let texto = $json.content[0].text.trim();\n\nconst asuntoMatch = texto.match(/ASUNTO:\\s*([\\s\\S]*?)(?=PREHEADER:|$)/i);\nconst preheaderMatch = texto.match(/PREHEADER:\\s*([\\s\\S]*?)(?=CUERPO:|$)/i);\nconst cuerpoMatch = texto.match(/CUERPO:\\s*([\\s\\S]*)/i);\n\nreturn {\n  asunto: asuntoMatch ? asuntoMatch[1].trim() : '',\n  preheader: preheaderMatch ? preheaderMatch[1].trim() : '',\n  cuerpo: cuerpoMatch ? cuerpoMatch[1].trim() : ''\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        -96
+      ],
+      "id": "a8c7663b-2d08-410c-a20a-cecd9fad683a",
+      "name": "Procesar respuesta IA 2"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-8005-b829-000bb7bec5ff",
+          "mode": "list",
+          "cachedResultName": "Newsletters",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab80ccb68dfbe8d4ad7f96"
+        },
+        "title": "={{ $json.asunto }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Preheader|rich_text",
+              "textContent": "={{ $json.preheader }}"
+            },
+            {
+              "key": "Cuerpo|rich_text",
+              "textContent": "={{ $json.cuerpo }}"
+            },
+            {
+              "key": "Versión|number",
+              "numberValue": 1
+            },
+            {
+              "key": "Modelo usado|rich_text",
+              "textContent": "claude-sonnet-4-6"
+            },
+            {
+              "key": "Estado |status",
+              "statusValue": "Borrador"
+            },
+            {
+              "key": "Idea de contenido|relation",
+              "relationValue": [
+                "={{ $('Actualizar estado: Procesado por IA').item.json.id }}"
+              ]
+            },
+            {
+              "key": "Tokens|number",
+              "numberValue": "=     {{ $('IA 2: Redactar newsletter').first().json.usage.input_tokens + $('IA 2: Redactar newsletter').first().json.usage.output_tokens }}"
+            },
+            {
+              "key": "Costo estimado|number",
+              "numberValue": "=     {{ Math.round(($('IA 2: Redactar newsletter').first().json.usage.input_tokens * 3 + $('IA 2: Redactar newsletter').first().json.usage.output_tokens * 15)) / 1000000 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        2304,
+        -96
+      ],
+      "id": "2ddf1872-bffd-406d-8c53-1360114283f5",
+      "name": "Guardar newsletter",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Actualizar estado: Procesado por IA').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Estado|select",
+              "selectValue": "En revisión"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        2528,
+        -96
+      ],
+      "id": "559138d7-bfa4-479b-975f-170589d7b488",
+      "name": "Actualizar estado: En revisión",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "giselguerreroastrologia@gmail.com",
+        "subject": "=Aprobación requerida: {{ $('Procesar respuesta IA 2').item.json.asunto }}",
+        "message": "=Hola Gisel,\n\nHay un newsletter listo para tu revisión.\n\nAsunto: {{ $('Procesar respuesta IA 2').item.json.asunto }}\nPreheader: {{ $('Procesar respuesta IA 2').item.json.preheader }}\n\nContenido:\n{{ $('Procesar respuesta IA 2').item.json.cuerpo }}\n\nPor favor revisa el contenido y elige una opción abajo.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Aprobar",
+            "disapproveLabel": "Pedir cambios"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 48
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2752,
+        -96
+      ],
+      "id": "c6df2661-7dd8-4e06-9f20-a0b0a3f4673f",
+      "name": "HITL: Aprobación humana",
+      "webhookId": "bbc53911-cc83-448d-9d3e-407e797e3ee6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PHe0Ow3cvUveOJby",
+          "name": "Gmail PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "524039d2-a87a-46fc-9699-84b2b561885b",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "Aprobado",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2976,
+        -96
+      ],
+      "id": "093a9258-9628-451e-894c-69814d0f9607",
+      "name": "Decisión: aprobado o pedir cambios"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Actualizar estado: Procesado por IA').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Estado|select",
+              "selectValue": "Aprobado por humano"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3200,
+        -192
+      ],
+      "id": "97a0c909-04cd-4233-9909-823b426f353b",
+      "name": "Actualizar estado: Aprobado",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Actualizar estado: Procesado por IA').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Número de revisiones|number",
+              "numberValue": "={{ $json.property_número_de_revisiones + 1 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3424,
+        16
+      ],
+      "id": "535de790-7cdd-4cf8-b0c1-8dc6cf37bb0f",
+      "name": "Sumar revisión.",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5ae1ade6-1c75-4bb6-8a57-638c460397b1",
+              "leftValue": "={{ $json.property_número_de_revisiones }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3648,
+        16
+      ],
+      "id": "b950c3f8-115a-499c-92a4-d13dc27570c0",
+      "name": "Límite de revisiones"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-8059-8ee2-000b1198e6db",
+          "mode": "list",
+          "cachedResultName": "Log de ejecuciones y errores",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab809bbc73c796270a4e44"
+        },
+        "title": "={{ $('Actualizar estado: Procesado por IA').item.json.property_name }} - Máximo de revisiones alcanzado",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Tipo de error|select",
+              "selectValue": "Máximo de revisiones"
+            },
+            {
+              "key": "Mensaje|rich_text",
+              "textContent": "={{ $('Actualizar estado: Procesado por IA').item.json.property_name }} alcanzó el máximo de 3 revisiones sin ser aprobado. Requiere revisión manual."
+            },
+            {
+              "key": "Severidad|select",
+              "selectValue": "Alta"
+            },
+            {
+              "key": "Fecha|date",
+              "date": "={{ $now.toISO() }}"
+            },
+            {
+              "key": "ID de ejecución|rich_text",
+              "textContent": "={{ $execution.id }}"
+            },
+            {
+              "key": "Nodo que falló|rich_text",
+              "textContent": "Límite de revisiones"
+            },
+            {
+              "key": "4 ideas de contenido|relation",
+              "relationValue": [
+                "={{ $('Actualizar estado: Procesado por IA').item.json.id }}"
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3872,
+        32
+      ],
+      "id": "a85fa85a-1487-4943-9462-a630e9804c7f",
+      "name": "Registrar error: máximo de revisiones",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Actualizar estado: Procesado por IA').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3216,
+        16
+      ],
+      "id": "f6afbd01-0ede-4de6-83b7-afd292a0062e",
+      "name": "Leer revisiones actuales",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "giselguerreroastrologia@gmail.com",
+        "subject": "=Revisión manual necesaria: {{ $('Actualizar estado: Procesado por IA').item.json.property_name }}",
+        "message": "=     <p>Hola,</p>\n     <p>El newsletter de la idea <strong>{{ $('Actualizar estado: Procesado por IA').item.json.property_name }}</strong> alcanzó el máximo de 3 revisiones sin ser aprobado, así que el flujo se detuvo.</p>\n     <p>Es necesario revisarlo manualmente antes de volver a procesarlo.</p>\n     <p><a href=\"{{ $('Actualizar estado: Procesado por IA').item.json.url }}\">Ver la idea en Notion</a><br>\n     <a href=\"{{ $json.url }}\">Ver el registro en el Log de errores</a></p>\n     <p>ID de ejecución: {{ $execution.id }}</p>",
+        "options": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        4096,
+        32
+      ],
+      "id": "d9a11eca-76b1-4889-b656-42ff54323c78",
+      "name": "Notificar: revisión manual necesaria",
+      "webhookId": "991da345-1e5b-4da3-85a0-37395b5647f0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PHe0Ow3cvUveOJby",
+          "name": "Gmail PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-80f1-919d-000b95b2b142",
+          "mode": "list",
+          "cachedResultName": "3 suscriptores",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab80a9a488d455f0bc111f"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Segmento|relation",
+              "condition": "contains",
+              "relationValue": "={{ $('Leer segmento').item.json.id }}"
+            },
+            {
+              "key": "Estado|select",
+              "condition": "equals",
+              "optionValue": "Activo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3424,
+        -192
+      ],
+      "id": "a1c577fd-d7b0-44f1-b17e-f2816630fdb5",
+      "name": "Leer suscriptores del segmento",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.property_email }}",
+        "subject": "={{ $('Procesar respuesta IA 2').first().json.asunto }}",
+        "message": "=     <p>Hola {{ $json.property_name.split(' ')[0] }},</p>\n     {{ $('Procesar respuesta IA 2').first().json.cuerpo }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "PlanoVivo"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3648,
+        -192
+      ],
+      "id": "cab54184-b100-41fe-ae65-288c4226f7c7",
+      "name": "Enviar newsletter al segmento",
+      "webhookId": "e6b5320c-922a-4d33-9a5c-68181a7cedb1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PHe0Ow3cvUveOJby",
+          "name": "Gmail PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Guardar newsletter').first().json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Estado |status",
+              "statusValue": "Enviado"
+            },
+            {
+              "key": "Destinatarios enviados|number",
+              "numberValue": "={{ $('Leer suscriptores del segmento').all().length }}"
+            },
+            {
+              "key": "Thread ID|rich_text",
+              "textContent": "={{ $('Enviar newsletter al segmento').all().map(item => item.json.threadId).join(', ') }}"
+            },
+            {
+              "key": "fecha de envío|date",
+              "date": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {},
+        "simple": "={{ true }}"
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        3872,
+        -192
+      ],
+      "id": "189490d0-3f6a-447e-b548-5894b5629457",
+      "name": "Actualizar newsletter: Enviado",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Actualizar estado: Procesado por IA').first().json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Estado|select",
+              "selectValue": "Enviado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        4096,
+        -192
+      ],
+      "id": "52591f04-0f46-4695-9cf0-545ba0fe351f",
+      "name": "Actualizar idea: Enviado.",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-8059-8ee2-000b1198e6db",
+          "mode": "list",
+          "cachedResultName": "Log de ejecuciones y errores",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab809bbc73c796270a4e44"
+        },
+        "title": "={{ $('Actualizar estado: Procesado por IA').first().json.property_name }} - Fallo de IA",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Tipo de error|select",
+              "selectValue": "Fallo de IA"
+            },
+            {
+              "key": "Mensaje|rich_text",
+              "textContent": "=La API de IA falló después de 3 intentos. Detalle: {{ $json.error?.message || 'sin detalle' }}"
+            },
+            {
+              "key": "Severidad|select",
+              "selectValue": "Alta"
+            },
+            {
+              "key": "Fecha|date",
+              "date": "={{ $now.toISO() }}"
+            },
+            {
+              "key": "ID de ejecución|rich_text",
+              "textContent": "={{ $execution.id }}"
+            },
+            {
+              "key": "Nodo que falló|rich_text",
+              "textContent": "IA 2: Redactar newsletter"
+            },
+            {
+              "key": "4 ideas de contenido|relation",
+              "relationValue": [
+                "={{ $('Actualizar estado: Procesado por IA').first().json.id }}"
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        1792,
+        272
+      ],
+      "id": "3e748d53-865d-4e4d-a40b-52e08d85add1",
+      "name": "Registrar error: fallo de IA 2",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e5db0e9-cfab-8059-8ee2-000b1198e6db",
+          "mode": "list",
+          "cachedResultName": "Log de ejecuciones y errores",
+          "cachedResultUrl": "https://app.notion.com/p/3e5db0e9cfab809bbc73c796270a4e44"
+        },
+        "title": "={{ $('Actualizar estado: Procesado por IA').first().json.property_name }} - Fallo de IA",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Tipo de error|select",
+              "selectValue": "Fallo de IA"
+            },
+            {
+              "key": "Mensaje|rich_text",
+              "textContent": "=La API de IA falló después de 3 intentos. Detalle: {{ $json.error?.message || 'sin detalle' }}"
+            },
+            {
+              "key": "Severidad|select",
+              "selectValue": "Alta"
+            },
+            {
+              "key": "Fecha|date",
+              "date": "={{ $now.toISO() }}"
+            },
+            {
+              "key": "ID de ejecución|rich_text",
+              "textContent": "={{ $execution.id }}"
+            },
+            {
+              "key": "Nodo que falló|rich_text",
+              "textContent": "IA 1: Clasificar prioridad"
+            },
+            {
+              "key": "4 ideas de contenido|relation",
+              "relationValue": [
+                "={{ $('Actualizar estado: Procesado por IA').first().json.id }}"
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        1456,
+        224
+      ],
+      "id": "1408d657-d18b-4ba9-b8bb-cd73957df4fd",
+      "name": "Registrar error: fallo de IA 1",
+      "credentials": {
+        "notionApi": {
+          "id": "nWgbVTzU79UhZ471",
+          "name": "Notion PlanoVivo"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Disparador: Idea actualizada": {
+      "main": [
+        [
+          {
+            "node": "Filtro: solo ideas Listo para IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtro: solo ideas Listo para IA": {
+      "main": [
+        [
+          {
+            "node": "Validación: datos completos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validación: datos completos": {
+      "main": [
+        [
+          {
+            "node": "Actualizar estado: Procesado por IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar error: datos faltantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar estado: Procesado por IA": {
+      "main": [
+        [
+          {
+            "node": "Leer segmento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer segmento": {
+      "main": [
+        [
+          {
+            "node": "Leer guía de marca",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer guía de marca": {
+      "main": [
+        [
+          {
+            "node": "IA 1: Clasificar prioridad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IA 1: Clasificar prioridad": {
+      "main": [
+        [
+          {
+            "node": "IA 2: Redactar newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar error: fallo de IA 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IA 2: Redactar newsletter": {
+      "main": [
+        [
+          {
+            "node": "Procesar respuesta IA 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar error: fallo de IA 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar respuesta IA 2": {
+      "main": [
+        [
+          {
+            "node": "Guardar newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar newsletter": {
+      "main": [
+        [
+          {
+            "node": "Actualizar estado: En revisión",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar estado: En revisión": {
+      "main": [
+        [
+          {
+            "node": "HITL: Aprobación humana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HITL: Aprobación humana": {
+      "main": [
+        [
+          {
+            "node": "Decisión: aprobado o pedir cambios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decisión: aprobado o pedir cambios": {
+      "main": [
+        [
+          {
+            "node": "Actualizar estado: Aprobado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer revisiones actuales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sumar revisión.": {
+      "main": [
+        [
+          {
+            "node": "Límite de revisiones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Límite de revisiones": {
+      "main": [
+        [
+          {
+            "node": "IA 2: Redactar newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar error: máximo de revisiones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer revisiones actuales": {
+      "main": [
+        [
+          {
+            "node": "Sumar revisión.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar error: máximo de revisiones": {
+      "main": [
+        [
+          {
+            "node": "Notificar: revisión manual necesaria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar estado: Aprobado": {
+      "main": [
+        [
+          {
+            "node": "Leer suscriptores del segmento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer suscriptores del segmento": {
+      "main": [
+        [
+          {
+            "node": "Enviar newsletter al segmento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar newsletter al segmento": {
+      "main": [
+        [
+          {
+            "node": "Actualizar newsletter: Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar newsletter: Enviado": {
+      "main": [
+        [
+          {
+            "node": "Actualizar idea: Enviado.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b804779e-c78b-4c1d-810e-a33712b80efd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29b4c06a3ff762c747875e4d36dc0a95ecd83abead125a7507920363e193e4a4"
+  },
+  "nodeGroups": [],
+  "id": "uQVQTF6o9pmpR5Vr",
+  "tags": []
+}
